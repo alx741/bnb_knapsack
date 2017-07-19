@@ -44,19 +44,19 @@ integralSolution = V.fromList [Selection (testItems V.! 0), Selection (testItems
 -- Total Value = 73
 testItems :: V.Vector Item
 testItems = V.fromList
-    [ Item 5 5
-    , Item 4 8
-    , Item 2 1
-    , Item 3 7
-    , Item 4 4
-    , Item 5 9
-    , Item 9 3
-    , Item 8 7
-    , Item 1 3
-    , Item 7 3
-    , Item 1 2
-    , Item 8 4
-    , Item 3 1
-    , Item 4 9
-    , Item 6 7
+    [ Item 1 5 5
+    , Item 2 4 8
+    , Item 3 2 1
+    , Item 4 3 7
+    , Item 5 4 4
+    , Item 6 5 9
+    , Item 7 9 3
+    , Item 8 8 7
+    , Item 9 1 3
+    , Item 10 7 3
+    , Item 11 1 2
+    , Item 12 8 4
+    , Item 13 3 1
+    , Item 14 4 9
+    , Item 15 6 7
     ]
