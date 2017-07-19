@@ -2,7 +2,7 @@ module Lib where
 
 import qualified Data.Vector as V
 
-type Room = Int
+type Room = Float
 
 data KnapsackProblem = KnapsackProblem
     { numberItems :: Int
