@@ -7,38 +7,42 @@ type Room = Float
 data KnapsackProblem = KnapsackProblem
     { numberItems :: Int
     , maxWeight :: Room
-    , elements :: V.Vector Item
+    , availableItems :: V.Vector Item
     } deriving (Show)
 
 data Item = Item
-    { itemWeight :: Float
+    { itemId :: Int
+    , itemWeight :: Float
     , itemValue :: Float
-    } deriving (Eq)
+    }
+
+instance Eq Item where
+    (==) i1 i2 = itemId i1 == itemId i2
 
 instance Ord Item where
     (<=) e1 e2 = (itemValue e1) <= (itemValue e2)
 
 instance Show Item where
-    show (Item w v) =
-        "Item: \n\tWeight: " ++ show w ++ "\n\tValue: " ++ show v ++ "\n"
+    show (Item i w v) =
+        "Item: " ++ show i ++ " \n\tWeight: " ++ show w ++ "\n\tValue: " ++ show v ++ "\n"
 
 -- Total Weight = 70
 -- Total Value = 73
 items :: V.Vector Item
 items = V.fromList
-    [ Item 5 5
-    , Item 4 8
-    , Item 2 1
-    , Item 3 7
-    , Item 4 4
-    , Item 5 9
-    , Item 9 3
-    , Item 8 7
-    , Item 1 3
-    , Item 7 3
-    , Item 1 2
-    , Item 8 4
-    , Item 3 1
-    , Item 4 9
-    , Item 6 7
+    [ Item 1 5 5
+    , Item 2 4 8
+    , Item 3 2 1
+    , Item 4 3 7
+    , Item 5 4 4
+    , Item 6 5 9
+    , Item 7 9 3
+    , Item 8 8 7
+    , Item 9 1 3
+    , Item 10 7 3
+    , Item 11 1 2
+    , Item 12 8 4
+    , Item 13 3 1
+    , Item 14 4 9
+    , Item 15 6 7
     ]
