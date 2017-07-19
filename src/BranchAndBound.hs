@@ -1,3 +1,6 @@
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 module BranchAndBound where
 
 import Lib
@@ -17,26 +20,27 @@ data Selection
     | Conflict Float Item
     deriving (Show, Eq)
 
-class SelectionType a where
-    isIntegral :: a -> Bool
-    isConflictive :: a -> Bool
-
-instance SelectionType Selection where
-    isIntegral (Selection _) = True
-    isIntegral _ = False
-    isConflictive = not . isIntegral
-
 type Items = V.Vector Item
 newtype SortedItems = SortedItems Items
 
 type Solution = V.Vector Selection
 
+class IsLinear a where
+    isIntegral :: a -> Bool
+    isConflictive :: a -> Bool
+    isConflictive = not . isIntegral
+
+instance IsLinear Selection where
+    isIntegral (Selection _) = True
+    isIntegral _ = False
+
+instance IsLinear Solution where
+    isIntegral = all isIntegral
+
+
 isSolutionFeasible :: Solution -> Room -> Bool
 isSolutionFeasible sol room =
-  (solutionWeight sol <= room) && isSolutionIntegral sol
-
-isSolutionIntegral :: Solution -> Bool
-isSolutionIntegral = all isIntegral
+    (solutionWeight sol <= room) && isIntegral sol
 
 solutionWeight :: Solution -> Float
 solutionWeight = sum . (fmap selectionWeight)
@@ -56,23 +60,24 @@ densityCompare e1 e2 = compare density1 density2
 
 sortByDensity :: Items -> SortedItems
 sortByDensity is =
-  SortedItems $ V.fromList $ reverse $ sortBy densityCompare $ V.toList is
+    SortedItems $ V.fromList $ reverse $ sortBy densityCompare $ V.toList is
 
 partialSolution :: SortedItems -> Room -> Solution
-partialSolution (SortedItems is) room = undefined
+partialSolution (SortedItems is) room =
+    selectItems (V.toList is) room (V.fromList [])
+    where
+        selectItems :: [Item] -> Room -> V.Vector Selection -> Solution
+        selectItems _ 0 selections = selections
+        selectItems (i:is) room selections =
+            let (roomLeft, selection) = selectItem room i
+                selections' = V.snoc selections selection
+            in  selectItems is roomLeft selections'
 
-selectItems :: [Item] -> Room -> V.Vector Selection -> Solution
-selectItems _ 0 selections = selections
-selectItems (i:is) room selections =
-    let (roomLeft, selection) = selectItem room i
-        selections' = V.snoc selections selection
-    in  selectItems is roomLeft selections'
-
-selectItem :: Room -> Item -> (Room, Selection)
-selectItem room item = if roomLeft >= 0
-    then (roomLeft, Selection item)
-    else (0, Conflict (room / weight item) item)
-    where roomLeft = room - (weight item)
+        selectItem :: Room -> Item -> (Room, Selection)
+        selectItem room item = if roomLeft >= 0
+            then (roomLeft, Selection item)
+            else (0, Conflict (room / weight item) item)
+            where roomLeft = room - (weight item)
 
 -- test stuff
 -- intSel :: Selection

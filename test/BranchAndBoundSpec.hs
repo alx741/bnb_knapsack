@@ -14,15 +14,15 @@ spec = do
             isSolutionFeasible integralSolution 1 `shouldBe` False
             isSolutionFeasible linearSolution 1000 `shouldBe` False
 
-    describe "selectItems" $ do
+    describe "partialSolution" $ do
         it "gives a solution for a given set of items and available room" $ do
-            let items = V.toList testItems
+            let items = SortedItems testItems
             let solution = V.fromList
                     [ Selection (testItems V.! 0)
                     , Selection (testItems V.! 1)
                     , Conflict 0.5 (testItems V.! 2)
                     ]
-            selectItems items 10 (V.fromList [])  `shouldBe` solution
+            partialSolution items 10  `shouldBe` solution
 
 
 
