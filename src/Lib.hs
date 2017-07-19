@@ -24,8 +24,8 @@ instance Show Item where
 
 -- Total Weight = 70
 -- Total Value = 73
-testItems :: V.Vector Item
-testItems = V.fromList
+items :: V.Vector Item
+items = V.fromList
     [ Item 5 5
     , Item 4 8
     , Item 2 1
