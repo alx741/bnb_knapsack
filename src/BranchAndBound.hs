@@ -37,20 +37,21 @@ instance IsLinear Selection where
 instance IsLinear Solution where
     isIntegral = all isIntegral
 
+class Weight a where
+    weight :: a -> Float
+
+instance Weight Selection where
+    weight (Selection i) = itemWeight i
+    weight (Conflict partial i) = partial * (itemWeight i)
+
+instance Weight Solution where
+    weight = sum . (fmap weight)
 
 isSolutionFeasible :: Solution -> Room -> Bool
-isSolutionFeasible sol room =
-    (solutionWeight sol <= room) && isIntegral sol
-
-solutionWeight :: Solution -> Float
-solutionWeight = sum . (fmap selectionWeight)
-
-selectionWeight :: Selection -> Float
-selectionWeight (Selection i) = value i
-selectionWeight (Conflict partial i) = partial * (value i)
+isSolutionFeasible sol room = (weight sol <= room) && isIntegral sol
 
 valueWeightDensity :: Item -> Float
-valueWeightDensity e = value e / weight e
+valueWeightDensity e = itemValue e / itemWeight e
 
 densityCompare :: Item -> Item -> Ordering
 densityCompare e1 e2 = compare density1 density2
@@ -76,8 +77,8 @@ partialSolution (SortedItems is) room =
         selectItem :: Room -> Item -> (Room, Selection)
         selectItem room item = if roomLeft >= 0
             then (roomLeft, Selection item)
-            else (0, Conflict (room / weight item) item)
-            where roomLeft = room - (weight item)
+            else (0, Conflict (room / itemWeight item) item)
+            where roomLeft = room - (itemWeight item)
 
 -- test stuff
 -- intSel :: Selection

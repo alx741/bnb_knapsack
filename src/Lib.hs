@@ -11,12 +11,12 @@ data KnapsackProblem = KnapsackProblem
     } deriving (Show)
 
 data Item = Item
-    { weight :: Float
-    , value :: Float
+    { itemWeight :: Float
+    , itemValue :: Float
     } deriving (Eq)
 
 instance Ord Item where
-    (<=) e1 e2 = (value e1) <= (value e2)
+    (<=) e1 e2 = (itemValue e1) <= (itemValue e2)
 
 instance Show Item where
     show (Item w v) =
