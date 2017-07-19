@@ -47,17 +47,17 @@ instance Weight Selection where
 instance Weight Solution where
     weight = sum . (fmap weight)
 
+class Density a where
+    density :: a -> Float
+
+instance Density Item where
+    density i = itemValue i / itemWeight i
+
 isSolutionFeasible :: Solution -> Room -> Bool
 isSolutionFeasible sol room = (weight sol <= room) && isIntegral sol
 
-valueWeightDensity :: Item -> Float
-valueWeightDensity e = itemValue e / itemWeight e
-
 densityCompare :: Item -> Item -> Ordering
-densityCompare e1 e2 = compare density1 density2
-  where
-    density1 = valueWeightDensity e1
-    density2 = valueWeightDensity e2
+densityCompare i1 i2 = compare (density i1) (density i2)
 
 sortByDensity :: Items -> SortedItems
 sortByDensity is =
