@@ -30,21 +30,33 @@ getItem (IntegralSel item) = item
 getItem (FractionalSel _ item) = item
 
 type Solution = V.Vector Selection
+type Candidates = [Node]
 
-branch :: KnapsackProblem -> Node -> Maybe Node
+bnb :: KnapsackProblem -> Solution
+bnb p =
+    let linearSolution = solveNode p $ Node Nothing Nothing [] []
+        (Node _ (Just solution) _ _) = solve p linearSolution []
+    in solution
+
+solve :: KnapsackProblem -> Node -> Candidates -> Node
+solve p@(KnapsackProblem _ room _) n cs =
+    case branch p n of
+        Nothing -> maximum cs
+        Just (n1, n2) ->
+            let feasibles = filter (isFeasible room) [n1, n2]
+                cs' = filter isIntegral feasibles
+            in solve p (maximum feasibles) (cs ++ cs')
+
+branch :: KnapsackProblem -> Node -> Maybe (Node, Node)
 branch problem@(KnapsackProblem _ room (SortedItems items))
-    node@(Node _ _ selected rejected) =
-    case conflictiveItem node of
-        Nothing -> Nothing
-        Just p ->
-            let n1 = solveNode problem $ Node Nothing Nothing selected [p]
-                n2 = solveNode problem $ Node Nothing Nothing (p : selected) []
-            in if isFeasible room n1 && isFeasible room n2
-                then return $ max n1 n2
-                else listToMaybe $ filter (isFeasible room) [n1, n2]
+    node@(Node _ _ selected rejected) = do
+    pivot <- conflictiveItem node
+    let n1 = Node Nothing Nothing selected [pivot]
+        n2 = Node Nothing Nothing (pivot : selected) []
+    return (solveNode problem n1, solveNode problem n2)
 
-someNode1 = Node (Just 1.0) (Just linearSolution) [] []
-someNode2 = Node (Nothing) (Just linearSolution) [] []
+-- someNode1 = Node (Just 1.0) (Just linearSolution) [] []
+-- someNode2 = Node (Nothing) (Just linearSolution) [] []
 
 conflictiveItem :: Node -> Maybe Item
 conflictiveItem n = nodeSolution n
@@ -106,6 +118,10 @@ instance IsLinear Selection where
 instance IsLinear Solution where
     isIntegral = all isIntegral
 
+instance IsLinear Node where
+    isIntegral (Node _ (Just sol) _ _) = isIntegral sol
+    isIntegral (Node _ Nothing _ _) = False
+
 class Weight a where
     weight :: a -> Float
 
@@ -134,37 +150,37 @@ instance Value Items where
 
 
 -- test stuff
-intSel :: Selection
-intSel = IntegralSel (testItems V.! 0)
+-- intSel :: Selection
+-- intSel = IntegralSel (testItems V.! 0)
 
-confSel :: Selection
-confSel = FractionalSel 0.5 (testItems V.! 1)
+-- confSel :: Selection
+-- confSel = FractionalSel 0.5 (testItems V.! 1)
 
-linearSolution :: Solution
-linearSolution = V.fromList [IntegralSel (testItems V.! 0), FractionalSel 0.5 (testItems V.! 1),
-    FractionalSel 0.2 (testItems V.! 2)]
+-- linearSolution :: Solution
+-- linearSolution = V.fromList [IntegralSel (testItems V.! 0), FractionalSel 0.5 (testItems V.! 1),
+--     FractionalSel 0.2 (testItems V.! 2)]
 
-integralSolution :: Solution
-integralSolution = V.fromList [IntegralSel (testItems V.! 0), IntegralSel (testItems V.! 1),
-    IntegralSel (testItems V.! 2)]
+-- integralSolution :: Solution
+-- integralSolution = V.fromList [IntegralSel (testItems V.! 0), IntegralSel (testItems V.! 1),
+--     IntegralSel (testItems V.! 2)]
 
--- -- Total Weight = 70
--- -- Total Value = 73
-testItems :: V.Vector Item
-testItems = V.fromList
-    [ Item 1 5 5
-    , Item 2 4 8
-    , Item 3 2 1
-    , Item 4 3 7
-    , Item 5 4 4
-    , Item 6 5 9
-    , Item 7 9 3
-    , Item 8 8 7
-    , Item 9 1 3
-    , Item 10 7 3
-    , Item 11 1 2
-    , Item 12 8 4
-    , Item 13 3 1
-    , Item 14 4 9
-    , Item 15 6 7
-    ]
+-- -- -- Total Weight = 70
+-- -- -- Total Value = 73
+-- testItems :: V.Vector Item
+-- testItems = V.fromList
+--     [ Item 1 5 5
+--     , Item 2 4 8
+--     , Item 3 2 1
+--     , Item 4 3 7
+--     , Item 5 4 4
+--     , Item 6 5 9
+--     , Item 7 9 3
+--     , Item 8 8 7
+--     , Item 9 1 3
+--     , Item 10 7 3
+--     , Item 11 1 2
+--     , Item 12 8 4
+--     , Item 13 3 1
+--     , Item 14 4 9
+--     , Item 15 6 7
+--     ]
