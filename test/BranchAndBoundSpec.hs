@@ -17,28 +17,44 @@ spec = do
     describe "partialSolution" $ do
         it "gives a solution for a given set of items and available room" $ do
             let items = SortedItems testItems
-            let solution = V.fromList
-                    [ Selection (testItems V.! 0)
-                    , Selection (testItems V.! 1)
-                    , Conflict 0.5 (testItems V.! 2)
+                solution = V.fromList
+                    [ IntegralSel (testItems V.! 0)
+                    , IntegralSel (testItems V.! 1)
+                    , FractionalSel 0.5 (testItems V.! 2)
                     ]
             partialSolution items 10  `shouldBe` solution
 
+    describe "solveNode" $ do
+        it "solves a single node" $ do
+            let selected = [testItems V.! 0, testItems V.! 2]
+                rejected = [testItems V.! 1, testItems V.! 3, testItems V.! 5,
+                    testItems V.! 7, testItems V.! 9, testItems V.! 11,
+                    testItems V.! 13, testItems V.! 14]
+                node = Node Nothing Nothing selected rejected
+                solution = fmap IntegralSel $ V.fromList
+                        [testItems V.! 0, testItems V.! 2, testItems V.! 8,
+                        testItems V.! 10, testItems V.! 4, testItems V.! 12,
+                        testItems V.! 6]
+                solvedNode = Node (Just 19.0) (Just solution) selected rejected
+            solveNode testProblem node  `shouldBe` solvedNode
 
 
 intSel :: Selection
-intSel = Selection (testItems V.! 0)
+intSel = IntegralSel (testItems V.! 0)
 
 confSel :: Selection
-confSel = Conflict 0.5 (testItems V.! 1)
+confSel = FractionalSel 0.5 (testItems V.! 1)
 
 linearSolution :: Solution
-linearSolution = V.fromList [Selection (testItems V.! 0), Conflict 0.5 (testItems V.! 1),
-    Conflict 0.2 (testItems V.! 2)]
+linearSolution = V.fromList [IntegralSel (testItems V.! 0), FractionalSel 0.5 (testItems V.! 1),
+    FractionalSel 0.2 (testItems V.! 2)]
 
 integralSolution :: Solution
-integralSolution = V.fromList [Selection (testItems V.! 0), Selection (testItems V.! 1),
-    Selection (testItems V.! 2)]
+integralSolution = V.fromList [IntegralSel (testItems V.! 0), IntegralSel (testItems V.! 1),
+    IntegralSel (testItems V.! 2)]
+
+testProblem :: KnapsackProblem
+testProblem = KnapsackProblem (V.length testItems) 50 $ sortByDensity testItems
 
 -- Total Weight = 70
 -- Total Value = 73
