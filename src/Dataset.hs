@@ -24,7 +24,7 @@ knapsackParser = do
     items <- some itemParser
     eof
     return $ KnapsackProblem numberItems maxWeight
-           $ V.fromList $ identifyItems items
+           $ sortByDensity $ V.fromList $ identifyItems items
 
 itemParser :: Parser ItemSimple
 itemParser = do

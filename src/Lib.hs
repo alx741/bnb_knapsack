@@ -1,13 +1,16 @@
 module Lib where
 
+import Data.List
 import qualified Data.Vector as V
 
 type Room = Float
+type Items = V.Vector Item
+newtype SortedItems = SortedItems Items deriving (Show)
 
 data KnapsackProblem = KnapsackProblem
     { numberItems :: Int
     , maxWeight :: Room
-    , availableItems :: V.Vector Item
+    , availableItems :: SortedItems
     } deriving (Show)
 
 data Item = Item
@@ -25,6 +28,19 @@ instance Ord Item where
 instance Show Item where
     show (Item i w v) =
         "Item: " ++ show i ++ " \n\tWeight: " ++ show w ++ "\n\tValue: " ++ show v ++ "\n"
+
+class Density a where
+    density :: a -> Float
+
+instance Density Item where
+    density i = itemValue i / itemWeight i
+
+densityCompare :: Item -> Item -> Ordering
+densityCompare i1 i2 = compare (density i1) (density i2)
+
+sortByDensity :: Items -> SortedItems
+sortByDensity is =
+    SortedItems $ V.fromList $ reverse $ sortBy densityCompare $ V.toList is
 
 -- Total Weight = 70
 -- Total Value = 73
