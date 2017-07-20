@@ -8,11 +8,12 @@ import qualified Data.Vector as V
 
 spec :: Spec
 spec = do
-    describe "isSolutionFeasible" $ do
+    describe "isFeasible" $ do
         it "tells if a solution is feasible" $ do
-            isSolutionFeasible integralSolution 1000  `shouldBe` True
-            isSolutionFeasible integralSolution 1 `shouldBe` False
-            isSolutionFeasible linearSolution 1000 `shouldBe` False
+            isFeasible 1000 integralSolution `shouldBe` True
+            isFeasible 1 integralSolution `shouldBe` False
+            isFeasible 1000 linearSolution `shouldBe` True
+            isFeasible 1 linearSolution `shouldBe` False
 
     describe "partialSolution" $ do
         it "gives a solution for a given set of items and available room" $ do
