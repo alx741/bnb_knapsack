@@ -6,6 +6,7 @@ module BranchAndBound where
 import Lib
 import Data.Maybe
 import qualified Data.Vector as V
+import Debug.Trace
 
 data Node = Node
     { nodeValue :: Maybe Float
@@ -45,18 +46,17 @@ solve p@(KnapsackProblem _ room _) n cs =
         Just (n1, n2) ->
             let feasibles = filter (isFeasible room) [n1, n2]
                 cs' = filter isIntegral feasibles
-            in solve p (maximum feasibles) (cs ++ cs')
+                branchOn = (maximum feasibles)
+            in --trace ("solve again with " ++ show (length cs') ++ " candidates on item: " ++ show branchOn)
+                solve p (maximum feasibles) (cs ++ cs')
 
 branch :: KnapsackProblem -> Node -> Maybe (Node, Node)
 branch problem@(KnapsackProblem _ room (SortedItems items))
     node@(Node _ _ selected rejected) = do
     pivot <- conflictiveItem node
-    let n1 = Node Nothing Nothing selected [pivot]
-        n2 = Node Nothing Nothing (pivot : selected) []
+    let n1 = Node Nothing Nothing selected (pivot : rejected)
+        n2 = Node Nothing Nothing (pivot : selected) rejected
     return (solveNode problem n1, solveNode problem n2)
-
--- someNode1 = Node (Just 1.0) (Just linearSolution) [] []
--- someNode2 = Node (Nothing) (Just linearSolution) [] []
 
 conflictiveItem :: Node -> Maybe Item
 conflictiveItem n = nodeSolution n
@@ -72,7 +72,8 @@ solveNode (KnapsackProblem _ room (SortedItems items)) (Node _ _ selected reject
     where
         selected' = V.fromList selected
         rejected' = V.fromList rejected
-        roomLeft  = room - weight selected'
+        shrunkenRoom = room - weight selected'
+        roomLeft = if shrunkenRoom < 0 then 0 else shrunkenRoom
         drop disposables = V.filter (not . (flip V.elem) disposables)
 
 partialSolution :: SortedItems -> Room -> Solution
@@ -147,40 +148,3 @@ instance Value Solution where
 
 instance Value Items where
     value = sum . (fmap itemValue)
-
-
--- test stuff
--- intSel :: Selection
--- intSel = IntegralSel (testItems V.! 0)
-
--- confSel :: Selection
--- confSel = FractionalSel 0.5 (testItems V.! 1)
-
--- linearSolution :: Solution
--- linearSolution = V.fromList [IntegralSel (testItems V.! 0), FractionalSel 0.5 (testItems V.! 1),
---     FractionalSel 0.2 (testItems V.! 2)]
-
--- integralSolution :: Solution
--- integralSolution = V.fromList [IntegralSel (testItems V.! 0), IntegralSel (testItems V.! 1),
---     IntegralSel (testItems V.! 2)]
-
--- -- -- Total Weight = 70
--- -- -- Total Value = 73
--- testItems :: V.Vector Item
--- testItems = V.fromList
---     [ Item 1 5 5
---     , Item 2 4 8
---     , Item 3 2 1
---     , Item 4 3 7
---     , Item 5 4 4
---     , Item 6 5 9
---     , Item 7 9 3
---     , Item 8 8 7
---     , Item 9 1 3
---     , Item 10 7 3
---     , Item 11 1 2
---     , Item 12 8 4
---     , Item 13 3 1
---     , Item 14 4 9
---     , Item 15 6 7
---     ]
