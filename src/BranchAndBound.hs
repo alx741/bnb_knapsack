@@ -4,6 +4,7 @@
 module BranchAndBound where
 
 import Lib
+import Data.Time.Clock
 import Data.Maybe
 import qualified Data.Vector as V
 import Debug.Trace
@@ -37,6 +38,27 @@ bnb :: KnapsackProblem -> Node
 bnb p =
     let linearSolution = solveNode p $ Node Nothing Nothing [] []
     in solve p linearSolution []
+
+-- solveInTimeThreshold :: UTCTime -> Int -> KnapsackProblem -> Node -> Candidates -> IO Node
+-- solveInTimeThreshold init seconds p n cs = do
+--     let n' = solve p n cs
+--         t <- getCurrentTime
+--     if diffUTCTime t init < 1 then solveInTimeThreshold init seconds p n' cs
+
+solveInTimeThreshold :: UTCTime -> NominalDiffTime -> KnapsackProblem -> Node -> Candidates -> IO (Node, Candidates)
+solveInTimeThreshold init seconds p@(KnapsackProblem _ room _) n cs = do
+    t <- getCurrentTime
+    if diffUTCTime t init < seconds
+    then
+        case branch p n of
+            Nothing -> return (maximum cs, cs)
+            Just (n1, n2) ->
+                let feasibles = filter (isFeasible room) [n1, n2]
+                    cs' = filter isIntegral feasibles
+                    branchOn = (maximum feasibles)
+                in
+                    solveInTimeThreshold init seconds p (maximum feasibles) (cs ++ cs')
+    else return (n, cs)
 
 solve :: KnapsackProblem -> Node -> Candidates -> Node
 solve p@(KnapsackProblem _ room _) n cs =
