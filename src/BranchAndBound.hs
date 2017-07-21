@@ -47,7 +47,7 @@ solve p@(KnapsackProblem _ room _) n cs =
             let feasibles = filter (isFeasible room) [n1, n2]
                 cs' = filter isIntegral feasibles
                 branchOn = (maximum feasibles)
-            in --trace ("solve again with " ++ show (length cs') ++ " candidates on item: " ++ show branchOn)
+            in
                 solve p (maximum feasibles) (cs ++ cs')
 
 branch :: KnapsackProblem -> Node -> Maybe (Node, Node)
