@@ -33,11 +33,10 @@ getItem (FractionalSel _ item) = item
 type Solution = V.Vector Selection
 type Candidates = [Node]
 
-bnb :: KnapsackProblem -> Solution
+bnb :: KnapsackProblem -> Node
 bnb p =
     let linearSolution = solveNode p $ Node Nothing Nothing [] []
-        (Node _ (Just solution) _ _) = solve p linearSolution []
-    in solution
+    in solve p linearSolution []
 
 solve :: KnapsackProblem -> Node -> Candidates -> Node
 solve p@(KnapsackProblem _ room _) n cs =
