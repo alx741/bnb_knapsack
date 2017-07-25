@@ -39,12 +39,6 @@ bnb p =
     let linearSolution = solveNode p $ Node Nothing Nothing [] []
     in solve p linearSolution []
 
--- solveInTimeThreshold :: UTCTime -> Int -> KnapsackProblem -> Node -> Candidates -> IO Node
--- solveInTimeThreshold init seconds p n cs = do
---     let n' = solve p n cs
---         t <- getCurrentTime
---     if diffUTCTime t init < 1 then solveInTimeThreshold init seconds p n' cs
-
 solveInTimeThreshold :: UTCTime -> NominalDiffTime -> KnapsackProblem -> Node -> Candidates -> IO (Node, Candidates)
 solveInTimeThreshold init seconds p@(KnapsackProblem _ room _) n cs = do
     t <- getCurrentTime
