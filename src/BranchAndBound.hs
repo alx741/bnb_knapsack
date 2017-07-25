@@ -6,6 +6,7 @@ module BranchAndBound where
 import Lib
 import Data.Time.Clock
 import Data.Maybe
+import Data.Foldable
 import qualified Data.Vector as V
 import Debug.Trace
 
@@ -33,37 +34,65 @@ getItem (FractionalSel _ item) = item
 
 type Solution = V.Vector Selection
 type Candidates = [Node]
+type LB = Int
 
 bnb :: KnapsackProblem -> Node
 bnb p =
-    let linearSolution = solveNode p $ Node Nothing Nothing [] []
-    in solve p linearSolution []
+    let nullNode = Node Nothing Nothing [] []
+        linearSolution = solveNode p nullNode
+    in solve p [linearSolution] 0 nullNode
 
-solveInTimeThreshold :: UTCTime -> NominalDiffTime -> KnapsackProblem -> Node -> Candidates -> IO (Node, Candidates)
-solveInTimeThreshold init seconds p@(KnapsackProblem _ room _) n cs = do
+solveInTimeThreshold :: UTCTime
+  -> NominalDiffTime
+  -> KnapsackProblem
+  -> [Node]
+  -> LB
+  -> Node
+  -> IO Node
+solveInTimeThreshold _ _ _ [] _ candidate = return candidate
+solveInTimeThreshold init seconds p@(KnapsackProblem _ room _) (n:ns) lb candidate = do
     t <- getCurrentTime
     if diffUTCTime t init < seconds
     then
         case branch p n of
-            Nothing -> return (maximum cs, cs)
+            Nothing -> solveInTimeThreshold init seconds p ns lb candidate
             Just (n1, n2) ->
-                let feasibles = filter (isFeasible room) [n1, n2]
-                    cs' = filter isIntegral feasibles
-                    branchOn = (maximum feasibles)
-                in
-                    solveInTimeThreshold init seconds p (maximum feasibles) (cs ++ cs')
-    else return (n, cs)
+                let prunees = foldr' (prune p lb) [] [n1, n2]
+                    candidates = filter
+                        (\n -> isIntegral n && isFeasible room n)
+                        (candidate : prunees)
+                    candidate' = if length candidates /= 0
+                        then best candidates
+                        else candidate
+                    lb' = fromMaybe lb $ round <$> nodeValue candidate'
+                in trace ("Candidate: " ++ show (nodeValue candidate')) solveInTimeThreshold init seconds p (ns ++ prunees) lb' candidate'
+    else return candidate
 
-solve :: KnapsackProblem -> Node -> Candidates -> Node
-solve p@(KnapsackProblem _ room _) n cs =
+solve :: KnapsackProblem -> [Node] -> LB -> Node -> Node
+solve _ [] _ candidate = candidate
+solve p@(KnapsackProblem _ room _) (n:ns) lb candidate =
     case branch p n of
-        Nothing -> maximum cs
+        Nothing -> solve p ns lb candidate
         Just (n1, n2) ->
-            let feasibles = filter (isFeasible room) [n1, n2]
-                cs' = filter isIntegral feasibles
-                branchOn = (maximum feasibles)
-            in
-                solve p (maximum feasibles) (cs ++ cs')
+            let prunees = foldr' (prune p lb) [] [n1, n2]
+                candidates = filter
+                    (\n -> isIntegral n && isFeasible room n)
+                    (candidate : prunees)
+                candidate' = if length candidates /= 0
+                    then best candidates
+                    else candidate
+                lb' = fromMaybe lb $ round <$> nodeValue candidate'
+            in trace ("Candidate: " ++ show (nodeValue candidate')) solve p (ns ++ prunees) lb' candidate'
+
+-- foldr (prune p lb) n [ns]
+prune :: KnapsackProblem -> LB -> Node -> [Node] -> [Node]
+prune p lb n ns = if not (shouldPrune p n lb) then n : ns else ns
+
+shouldPrune :: KnapsackProblem -> Node -> LB -> Bool
+shouldPrune p n lb =
+    case nodeValue n of
+        Nothing -> False
+        Just v -> not (isIntegral n) && v <= fromIntegral lb
 
 branch :: KnapsackProblem -> Node -> Maybe (Node, Node)
 branch problem@(KnapsackProblem _ room (SortedItems items))
@@ -163,3 +192,9 @@ instance Value Solution where
 
 instance Value Items where
     value = sum . (fmap itemValue)
+
+class Best a where
+    best :: [a] -> a
+
+instance Best Node where
+    best = maximum

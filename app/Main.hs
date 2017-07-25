@@ -10,13 +10,21 @@ import System.Process
 
 main :: IO ()
 main = do
-    problem <- readData "test_data/4096.knp"
+    problem <- readData "test_data/20.knp"
 
-    -- -- Fully solve
-    -- print $ bnb problem
+    -- Fully solve
+    let candidate = bnb problem
 
-    -- Best solve in time threshold
-    let linSol = solveNode problem $ Node Nothing Nothing [] []
-    t <- getCurrentTime
-    (sol, candidates) <- solveInTimeThreshold t 60 problem linSol []
-    print $ "best candidate" ++ show (maximum candidates)
+    -- -- Best solve in time threshold
+    -- let nullNode = Node Nothing Nothing [] []
+    --     linearSolution = solveNode problem nullNode
+    -- t <- getCurrentTime
+    -- candidate <- solveInTimeThreshold t 120 problem [linearSolution] 0 nullNode
+
+
+    -- Print full solution
+    print $ "# Solution: " ++ show (nodeValue candidate)
+
+    -- Print solution value
+    -- print candidate
+
