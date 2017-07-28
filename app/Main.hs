@@ -10,7 +10,7 @@ import System.Process
 
 main :: IO ()
 main = do
-    problem <- readData "test_data/20.knp"
+    problem <- readData "test_data/1536.knp"
 
     -- Fully solve
     let candidate = bnb problem
@@ -23,8 +23,8 @@ main = do
 
 
     -- Print full solution
-    print $ "# Solution: " ++ show (nodeValue candidate)
+    -- print $ "# Solution: " ++ show (nodeValue candidate)
 
     -- Print solution value
-    -- print candidate
+    print candidate
 
